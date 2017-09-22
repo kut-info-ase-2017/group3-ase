@@ -54,8 +54,8 @@ def LED_lightup(LEDPIN):
     GPIO.output(LEDPIN,GPIO.LOW)
 
 def take_photo():
-    return True
-    #return False
+    #return True
+    return False
 
 #main function
 def main():
@@ -66,7 +66,7 @@ def main():
         if(GPIO.input(PIRPin)!=0):
             GPIO.output(BuzzerPin,GPIO.LOW)
             print ('********************')
-            print ('*     alarm!     *')
+            print ('*     alarm!       *')
             print ('********************')
             print ('\n')
             if take_photo() == True:
@@ -77,7 +77,7 @@ def main():
         else:
             GPIO.output(BuzzerPin,GPIO.HIGH)
             print ('====================')
-            print ('=     Not alarm...  =')
+            print ('=    Not alarm...  =')
             print ('====================')
             print ('\n')
             LED_lightup(LEDPIN_yellow)
