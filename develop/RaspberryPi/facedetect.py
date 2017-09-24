@@ -24,6 +24,7 @@ image_scale = 2
 haar_scale = 1.2
 min_neighbors = 2
 haar_flags = 0
+facecount = 0
 
 def detect_and_draw(img, cascade):
     # allocate temporary images
@@ -45,19 +46,22 @@ def detect_and_draw(img, cascade):
                                      haar_scale, min_neighbors, haar_flags, min_size)
         t = cv.GetTickCount() - t
         print "detection time = %gms" % (t/(cv.GetTickFrequency()*1000.))
-        
+        print "facecount = ",facecount
+
         if faces:
             for ((x, y, w, h), n) in faces:
+                global facecount
+                facecount = facecount+1
                 # the input to cv.HaarDetectObjects was resized, so scale the 
                 # bounding box of each face and convert it to two CvPoints
+                if facecount == 10:
+                    cv.SaveImage("visiter.jpg",img)
+                    facecount=0
                 pt1 = (int(x * image_scale), int(y * image_scale))
                 pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
                 cv.Rectangle(img, pt1, pt2, cv.RGB(255, 0, 0), 3, 8, 0)
-                #facecount = facecount + 1 #add
-                #if facecount == 5:
-                cv.imwrite("visiter.jpg",img)
-
-    cv.ShowImage("result", img)
+                
+    #cv.ShowImage("result", img)
 
 if __name__ == '__main__':
 
@@ -77,7 +81,7 @@ if __name__ == '__main__':
     else:
         capture = None
 
-    cv.NamedWindow("result", 1)
+    #cv.NamedWindow("result", 1)
 
     width = 320 #leave None for auto-detection
     height = 240 #leave None for auto-detection
@@ -104,7 +108,7 @@ if __name__ == '__main__':
                 frame_copy = cv.CreateImage((frame.width,frame.height),
                                             cv.IPL_DEPTH_8U, frame.nChannels)
 
-#                frame_copy = cv.CreateImage((frame.width,frame.height),
+#               frame_copy = cv.CreateImage((frame.width,frame.height),
 #                                            cv.IPL_DEPTH_8U, frame.nChannels)
 
             if frame.origin == cv.IPL_ORIGIN_TL:
@@ -121,4 +125,4 @@ if __name__ == '__main__':
         detect_and_draw(image, cascade)
         cv.WaitKey(0)
 
-    cv.DestroyWindow("result")
+    #cv.DestroyWindow("result")
