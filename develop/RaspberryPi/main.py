@@ -53,6 +53,9 @@ def LED_lightup(LEDPIN):
     time.sleep(0.5)
     GPIO.output(LEDPIN,GPIO.LOW)
 
+
+
+
 def take_photo():
     #return True
     return False
