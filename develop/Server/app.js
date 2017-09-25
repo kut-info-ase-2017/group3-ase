@@ -51,6 +51,12 @@ app.post('/',upload.single('data'), function(req, res) {
             console.log("response false.");
             res.end("false");
           }
+          if (!bool)
+            exec('python ../mail/mail.py', (err, stdout, stderr) => {
+                if (err) { console.log("error : " + err); }
+                console.log(stdout);
+              }
+            );
         });
     });
   });

@@ -20,18 +20,18 @@ if result[0] != 250:
 #    sys.exit()
 
 # 送信先アドレス，送信アドレスの設定
-send_mail = 'send@gmail.com'
-receive_mail = 'receive@gmail.com'
+send_mail = 'haihai.ase@gmail.com'
+receive_mail = 'kataoka@pl.info.kochi-tech.ac.jp'
 
 encoding = 'utf-8'
 
 # 件名の設定
-subject = 'test'
+subject = 'Caution!!'
 # 本文の設定
-body = 'This is a test mail.'
+body = 'A unknown person came out. HAHAHA!!'
 # 添付画像のパスの指定
-image_pass = '../photo/unknown/who0.jpg'
-file_name = 'who0.jpg'
+image_pass = '../Server/public/images/photo.jpg'
+file_name = 'unknown.jpg'
 
 msg = MIMEMultipart()
 mt = MIMEText(body.encode(encoding), "plain", encoding)
@@ -47,7 +47,7 @@ msg['From'] = send_mail
 msg['To'] = receive_mail
 msg['Date'] = formatdate()
 
-password = input()
+password = "kataokatakafumi" #input()
 result = smtp_obj.login(send_mail, password)
 if result[0] != 235:
     print('login is failed.')
