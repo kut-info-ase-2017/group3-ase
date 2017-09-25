@@ -11,11 +11,9 @@ import cv2.cv as cv
 import numpy as np
 from optparse import OptionParser
 
-
-
 import RPi.GPIO as GPIO
 import time
-import facedetect
+import requests
 
 # set BCM_GPIO 17(GPIO 0) as PIR pin
 PIRPin = 17
@@ -46,8 +44,15 @@ def LED_lightup(LEDPIN):
     time.sleep(0.5)
     GPIO.output(LEDPIN,GPIO.LOW)
 
-
-
+def post():
+    #return 'false'
+    res = requests.post('https://192.168.11.2:3000',
+                      files = {
+                          "data": ("photo.jpg", open("./photo.jpg", "rb"),
+                          "image/jpeg")
+                          }, verify=False)
+    # print(res.text)
+    return res.text
 
 # Parameters for haar detection
 # From the API:
@@ -66,7 +71,7 @@ haar_flags = 0
 facecount = 0
 nofacecount = 0
 
-def detect_and_draw(img, cascade):
+def detect_face(img, cascade):
     # allocate temporary images
     gray = cv.CreateImage((img.width,img.height), 8, 1)
     small_img = cv.CreateImage((cv.Round(img.width / image_scale),
@@ -79,8 +84,8 @@ def detect_and_draw(img, cascade):
     cv.Resize(gray, small_img, cv.CV_INTER_LINEAR)
 
     cv.EqualizeHist(small_img, small_img)
-
-    if(cascade):
+    
+    if (cascade):
         t = cv.GetTickCount()
         faces = cv.HaarDetectObjects(small_img, cascade, cv.CreateMemStorage(0),
                                      haar_scale, min_neighbors, haar_flags, min_size)
@@ -88,28 +93,35 @@ def detect_and_draw(img, cascade):
         print "detection time = %gms" % (t/(cv.GetTickFrequency()*1000.))
         print "facecount   = ",facecount
         print "nofacecount = ",nofacecount
+        return faces
+    return None
 
-        if faces:
-            global facecount
+def detect_and_draw(img, cascade):
+    print('detect_and_draw: ')
+    print(facecount)
+    print(nofacecount)
+    faces = detect_face(img, cascade)
+    if faces:
+        global facecount
+        nofacecount = 0
+        facecount = facecount+1
+        if facecount == 10:
+            cv.SaveImage("photo.jpg",img)
+            facecount=0
+            return 1
+        for ((x, y, w, h), n) in faces:
+            # the input to cv.HaarDetectObjects was resized, so scale the 
+            # bounding box of each face and convert it to two CvPoints
+            pt1 = (int(x * image_scale), int(y * image_scale))
+            pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
+            cv.Rectangle(img, pt1, pt2, cv.RGB(255, 0, 0), 3, 8, 0)
+    else:
+        global nofacecount
+        facecount = 0
+        nofacecount = nofacecount + 1
+        if nofacecount == 50:
             nofacecount = 0
-            facecount = facecount+1
-            if facecount == 10:
-                cv.SaveImage("visiter.jpg",img)
-                facecount=0
-                return 1
-            for ((x, y, w, h), n) in faces:
-                # the input to cv.HaarDetectObjects was resized, so scale the 
-                # bounding box of each face and convert it to two CvPoints
-                pt1 = (int(x * image_scale), int(y * image_scale))
-                pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
-                cv.Rectangle(img, pt1, pt2, cv.RGB(255, 0, 0), 3, 8, 0)
-        else:
-            global nofacecount
-            facecount = 0
-            nofacecount = nofacecount + 1
-            if nofacecount == 50:
-                nofacecount = 0
-                return 2
+            return 2
     return 0
                 
     #cv.ShowImage("result", img)
@@ -146,6 +158,7 @@ def main():
 	cv.SetCaptureProperty(capture,cv.CV_CAP_PROP_FRAME_HEIGHT,height) 
 
     mode = 0
+    count = 0
     if capture:
         frame_copy = None
         while True:
@@ -176,11 +189,47 @@ def main():
             
                 result = detect_and_draw(frame_copy, cascade)
                 if result == 1:
+                    post_res = post()
                     print('DETECT!!!')
+                    print(post_res)
+                    if post_res == 'true':
+                        mode = 2
+                    elif post_res == 'false':
+                        mode = 3
                 elif result == 2:
-                    print('Camera Off');
+                    print('Camera Off')
                     mode = 0
 
+                
+            elif mode == 2:
+                print('mode2')
+                print(count)
+                LED_lightup(LEDPIN_green)
+                time.sleep(0.5)
+                count = count + 1
+                if (count > 10):
+                    count = 0
+                    mode = 0
+            elif mode == 3:
+                print('mode3')
+                print(count)
+                LED_lightup(LEDPIN_red)
+                GPIO.output(BuzzerPin,GPIO.LOW)
+                time.sleep(0.5)
+                GPIO.output(BuzzerPin,GPIO.HIGH)
+                frame = cv.QueryFrame(capture)
+                if not frame:
+                    cv.WaitKey(0)
+                    break
+                faces = detect_face(frame, cascade)
+                print(faces)
+                if not faces:
+                    count = count + 1
+                    if (count > 3):
+                        mode = 0
+                        count = 0
+                else:
+                    count = 0
 
             if cv.WaitKey(10) >= 0:
                 break
@@ -191,6 +240,12 @@ def main():
 
     #cv.DestroyWindow("result")
 
+def destroy():
+    #turn off buzzer
+    GPIO.output(BuzzerPin,GPIO.HIGH)
+    #release resource
+    GPIO.cleanup()
+#
 
 if __name__ == '__main__':
     setup()
