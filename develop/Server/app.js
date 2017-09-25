@@ -36,7 +36,9 @@ app.post('/',upload.single('data'), function(req, res) {
         console.log(response);
         exec('face_recognition ../photo/known ./public/images/', (err, stdout, stderr) => {
           if (err) { console.log("error : " + err); }
-          lines = stdout.split('\n').pop();
+          lines = stdout.split('\n');
+          lines.pop();
+          console.log(lines);
           var bool = false;
           lines.forEach(function(line){
             if (!line.match(/unknown_person/))
