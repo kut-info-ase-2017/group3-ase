@@ -11,11 +11,9 @@ import cv2.cv as cv
 import numpy as np
 from optparse import OptionParser
 
-
-
 import RPi.GPIO as GPIO
 import time
-import facedetect
+import requests
 
 # set BCM_GPIO 17(GPIO 0) as PIR pin
 PIRPin = 17
@@ -28,6 +26,7 @@ LEDPIN_yellow = 13
 # set BCM_GPIO 20(GPIO 4) as buzzer pin
 BuzzerPin = 20
 
+post_res = 'none'
 #setup function for some setup---custom function
 def setup():
     GPIO.setwarnings(False)
@@ -46,8 +45,18 @@ def LED_lightup(LEDPIN):
     time.sleep(0.5)
     GPIO.output(LEDPIN,GPIO.LOW)
 
-
-
+def post():
+    global post_res
+    post_res = "false"
+    print post_res
+    """
+    res = requests.post('https://localhost:3000',
+                      files = {
+                          "data": ("photo.jpg", open("./photo.jpg", "rb"),
+                          "image/jpeg")
+                          }, verify=False)
+    print(res.text)
+    """
 
 # Parameters for haar detection
 # From the API:
@@ -94,7 +103,7 @@ def detect_and_draw(img, cascade):
             nofacecount = 0
             facecount = facecount+1
             if facecount == 10:
-                cv.SaveImage("visiter.jpg",img)
+                cv.SaveImage("photo.jpg",img)
                 facecount=0
                 return 1
             for ((x, y, w, h), n) in faces:
@@ -176,11 +185,26 @@ def main():
             
                 result = detect_and_draw(frame_copy, cascade)
                 if result == 1:
+                    post()
                     print('DETECT!!!')
                 elif result == 2:
-                    print('Camera Off');
+                    print('Camera Off')
                     mode = 0
 
+                if post_res == 'true':
+                    mode = 2
+                elif post_res == 'false':
+                    mode = 3
+            elif mode == 2:
+                print('mode2')
+                LED_lightup(LEDPIN_green)
+                time.sleep(0.5)
+            elif mode == 3:
+                print('mode3')
+                LED_lightup(LEDPIN_red)
+                GPIO.output(BuzzerPin,GPIO.LOW)
+                time.sleep(0.5)
+                GPIO.output(BuzzerPin,GPIO.HIGH)
 
             if cv.WaitKey(10) >= 0:
                 break
@@ -191,6 +215,12 @@ def main():
 
     #cv.DestroyWindow("result")
 
+def destroy():
+    #turn off buzzer
+    GPIO.output(BuzzerPin,GPIO.HIGH)
+    #release resource
+    GPIO.cleanup()
+#
 
 if __name__ == '__main__':
     setup()
