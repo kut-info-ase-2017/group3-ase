@@ -45,15 +45,14 @@ def LED_lightup(LEDPIN):
     GPIO.output(LEDPIN,GPIO.LOW)
 
 def post():
-    return 'false'
-    """
-    res = requests.post('https://localhost:3000',
+    #return 'false'
+    res = requests.post('https://192.168.11.2:3000',
                       files = {
                           "data": ("photo.jpg", open("./photo.jpg", "rb"),
                           "image/jpeg")
                           }, verify=False)
-    print(res.text)
-    """
+    # print(res.text)
+    return res.text
 
 # Parameters for haar detection
 # From the API:
@@ -192,6 +191,7 @@ def main():
                 if result == 1:
                     post_res = post()
                     print('DETECT!!!')
+                    print(post_res)
                     if post_res == 'true':
                         mode = 2
                     elif post_res == 'false':
