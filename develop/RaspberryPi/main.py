@@ -8,6 +8,7 @@
 ############################################################################
 import RPi.GPIO as GPIO
 import time
+import facedetect
 
 # set BCM_GPIO 17(GPIO 0) as PIR pin
 PIRPin = 17
@@ -53,12 +54,10 @@ def LED_lightup(LEDPIN):
     time.sleep(0.5)
     GPIO.output(LEDPIN,GPIO.LOW)
 
-
-
-
 def take_photo():
+    facedetect.faceMain()
     #return True
-    return False
+    #return False
 
 #main function
 def main():
