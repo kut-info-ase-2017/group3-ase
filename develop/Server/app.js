@@ -35,18 +35,20 @@ app.post('/',upload.single('data'), function(req, res) {
         }
         console.log(response);
         exec('face_recognition ../photo/known ./public/images/', (err, stdout, stderr) => {
-          if (err) { console.log(err); }
-          console.log("kokokara");
+          if (err) { console.log("error : " + err); }
           lines = stdout.split('\n').pop();
           var bool = false;
           lines.forEach(function(line){
             if (!line.match(/unknown_person/))
               bool = true;
           });
-          if (bool)
+          if (bool) {
+            console.log("response true.");
             res.end("true");
-          else
+          } else {
+            console.log("response false.");
             res.end("false");
+          }
         });
     });
   });
