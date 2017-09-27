@@ -21,7 +21,7 @@ if result[0] != 250:
 
 # 送信先アドレス，送信アドレスの設定
 send_mail = 'haihai.ase@gmail.com'
-receive_mail = 'kataoka@pl.info.kochi-tech.ac.jp'
+receive_mail = 'haihai.ase@gmail.com'
 
 encoding = 'utf-8'
 
